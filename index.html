@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Poll Survey</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #131313, #282828);
+            font-family: 'Roboto', sans-serif;
+            color: #ffffff;
+        }
+
+        .poll-container {
+            background: #1e1e1e;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            width: 350px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .poll-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .option {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .option input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .option label {
+            background-color: #2c2c2c;
+            padding: 12px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .option label::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 10px;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #6200ea;
+            border-radius: 50%;
+            background: transparent;
+            transition: background 0.3s ease;
+        }
+
+        input:checked + label {
+            background-color: #6200ea;
+            color: #fff;
+        }
+
+        input:checked + label::before {
+            background: #6200ea;
+        }
+
+        button {
+            background-color: #6200ea;
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            width: 100%;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        button:hover {
+            background-color: #3700b3;
+            transform: translateY(-2px);
+        }
+
+        .results {
+            margin-top: 30px;
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="poll-container">
+    <h2>Which do you prefer?</h2>
+    <div class="option">
+        <input type="radio" id="option1" name="poll" value="Option 1">
+        <label for="option1">Grilled Cheese</label>
+    </div>
+    <div class="option">
+        <input type="radio" id="option2" name="poll" value="Option 2">
+        <label for="option2">Mac & Cheese</label>
+    </div>
+    <button id="submitVote">Submit Vote</button>
+    <div class="results" id="results"></div>
+</div>
+
+<script>
+    const submitVoteButton = document.getElementById('submitVote');
+    const resultsDiv = document.getElementById('results');
+
+    const pollKey = 'pollVote';
+    const votesKey = 'pollVotes';
+
+    let votes = JSON.parse(localStorage.getItem(votesKey)) || { "Option 1": 0, "Option 2": 0 };
+
+    submitVoteButton.addEventListener('click', () => {
+        const selectedOption = document.querySelector('input[name="poll"]:checked');
+
+        if (!selectedOption) {
+            alert('Please select an option before submitting.');
+            return;
+        }
+
+        const optionValue = selectedOption.value;
+
+        // Check if the user has already voted
+        if (localStorage.getItem(pollKey)) {
+            alert('You have already voted!');
+            return;
+        }
+
+        // Record the vote and update counts
+        votes[optionValue]++;
+        localStorage.setItem(pollKey, 'true');
+        localStorage.setItem(votesKey, JSON.stringify(votes));
+
+        // Display results
+        displayResults();
+    });
+
+    function displayResults() {
+        resultsDiv.style.display = 'block';
+        resultsDiv.innerHTML = `
+            <h3>Results:</h3>
+            <p>Option 1: ${votes["Option 1"]} votes</p>
+            <p>Option 2: ${votes["Option 2"]} votes</p>
+        `;
+    }
+
+    // Reset votes every week
+    if (!localStorage.getItem('lastReset') || (Date.now() - localStorage.getItem('lastReset')) > 604800000) {
+        localStorage.removeItem(votesKey);
+        localStorage.removeItem(pollKey);
+        localStorage.setItem('lastReset', Date.now());
+    }
+
+    // Check if the user has already voted and display results if they have
+    if (localStorage.getItem(pollKey)) {
+        displayResults();
+    }
+</script>
+
+</body>
+</html>
