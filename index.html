@@ -145,7 +145,7 @@
     const pollKey = 'pollVote';
     const votesKey = 'pollVotes';
 
-    let votes = JSON.parse(localStorage.getItem(votesKey)) || { "Option 1": 0, "Option 2": 0 };
+    let votes = JSON.parse(localStorage.getItem(votesKey)) || { "Grilles Cheese": 0, "Mac & Cheese": 0 };
 
     submitVoteButton.addEventListener('click', () => {
         const selectedOption = document.querySelector('input[name="poll"]:checked');
