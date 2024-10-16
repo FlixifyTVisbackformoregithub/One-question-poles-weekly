@@ -127,11 +127,11 @@
 <div class="poll-container">
     <h2>Which do you prefer?</h2>
     <div class="option">
-        <input type="radio" id="option1" name="poll" value="Option 1">
+        <input type="radio" id="option1" name="poll" value="Grilled Cheese">
         <label for="option1">Grilled Cheese</label>
     </div>
     <div class="option">
-        <input type="radio" id="option2" name="poll" value="Option 2">
+        <input type="radio" id="option2" name="poll" value="Mac & Cheese">
         <label for="option2">Mac & Cheese</label>
     </div>
     <button id="submitVote">Submit Vote</button>
@@ -145,7 +145,7 @@
     const pollKey = 'pollVote';
     const votesKey = 'pollVotes';
 
-    let votes = JSON.parse(localStorage.getItem(votesKey)) || { "Grilles Cheese": 0, "Mac & Cheese": 0 };
+    let votes = JSON.parse(localStorage.getItem(votesKey)) || { "option 1": 0, "option 2": 0 };
 
     submitVoteButton.addEventListener('click', () => {
         const selectedOption = document.querySelector('input[name="poll"]:checked');
