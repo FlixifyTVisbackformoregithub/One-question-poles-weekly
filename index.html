@@ -97,26 +97,43 @@
 <script>
     const submitVoteButton = document.getElementById('submitVote');
     const resultsDiv = document.getElementById('results');
-    const gistUrl = 'https://gist.github.com/FlixifyTVisbackformoregithub/61f67253efd33e47221087dd642c1952'; // Replace with your actual Gist URL
-    const githubToken = 'MY_TOKEN'; // Optional: Replace with your GitHub token if required
+    const gistUrl = 'https://api.github.com/gists/61f67253efd33e47221087dd642c1952'; // Use the raw API URL for Gist
+    const githubToken = 'YOUR_GITHUB_TOKEN'; // Replace with your GitHub token (keep it hidden!)
 
     async function fetchVotes() {
-        const response = await fetch(gistUrl);
-        const data = await response.json();
-        return JSON.parse(data.content); // Parse the JSON content
+        try {
+            const response = await fetch(gistUrl);
+            if (!response.ok) {
+                throw new Error(`Error fetching votes: ${response.statusText}`);
+            }
+            const data = await response.json();
+            return JSON.parse(data.files['votes.json'].content); // Adjust based on Gist file settings
+        } catch (error) {
+            alert(error);
+            console.error('Fetch error:', error);
+            return { "Grilled Cheese": 0, "Mac & Cheese": 0 }; // default values
+        }
     }
 
     async function updateVotes(updatedVotes) {
-        const response = await fetch(gistUrl, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/vnd.github.v3+json',
-                'Authorization': `token ${githubToken}`
-            },
-            body: JSON.stringify({ content: JSON.stringify(updatedVotes) })
-        });
-        return response;
+        try {
+            const response = await fetch(gistUrl, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Authorization': `token ${githubToken}`
+                },
+                body: JSON.stringify({ files: { 'votes.json': { content: JSON.stringify(updatedVotes) } } })
+            });
+            if (!response.ok) {
+                throw new Error(`Error updating votes: ${response.statusText}`);
+            }
+            return response.json();
+        } catch (error) {
+            alert(error);
+            console.error('Update error:', error);
+        }
     }
 
     submitVoteButton.addEventListener('click', async () => {
@@ -130,8 +147,10 @@
         const optionValue = selectedOption.value;
         const votes = await fetchVotes();
         
+        // Increment the vote count
         votes[optionValue]++;
         
+        // Update the vote count in the Gist
         await updateVotes(votes);
         displayResults(votes);
     });
