@@ -17,7 +17,6 @@
             font-family: 'Roboto', sans-serif;
             color: #ffffff;
         }
-
         .poll-container {
             background: #1e1e1e;
             border-radius: 12px;
@@ -26,67 +25,35 @@
             width: 350px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
         .poll-container:hover {
             transform: translateY(-5px);
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
         }
-
         h2 {
             text-align: center;
             margin-bottom: 20px;
             font-size: 24px;
             font-weight: bold;
-            letter-spacing: 0.5px;
         }
-
         .option {
             margin: 15px 0;
             display: flex;
             align-items: center;
             cursor: pointer;
-            position: relative;
         }
-
         .option input {
             position: absolute;
             opacity: 0;
             cursor: pointer;
         }
-
         .option label {
             background-color: #2c2c2c;
             padding: 12px 20px;
             border-radius: 5px;
-            transition: background-color 0.3s ease, transform 0.3s ease;
+            transition: background-color 0.3s ease;
             flex: 1;
             text-align: center;
-            position: relative;
         }
-
-        .option label::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 10px;
-            transform: translateY(-50%);
-            width: 20px;
-            height: 20px;
-            border: 2px solid #6200ea;
-            border-radius: 50%;
-            background: transparent;
-            transition: background 0.3s ease;
-        }
-
-        input:checked + label {
-            background-color: #6200ea;
-            color: #fff;
-        }
-
-        input:checked + label::before {
-            background: #6200ea;
-        }
-
         button {
             background-color: #6200ea;
             color: white;
@@ -97,21 +64,12 @@
             font-size: 16px;
             margin-top: 20px;
             width: 100%;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
         }
-
-        button:hover {
-            background-color: #3700b3;
-            transform: translateY(-2px);
-        }
-
         .results {
             margin-top: 30px;
             display: none;
             animation: fadeIn 0.5s;
         }
-
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -123,7 +81,6 @@
     </style>
 </head>
 <body>
-
 <div class="poll-container">
     <h2>Which do you prefer?</h2>
     <div class="option">
@@ -137,17 +94,32 @@
     <button id="submitVote">Submit Vote</button>
     <div class="results" id="results"></div>
 </div>
-
 <script>
     const submitVoteButton = document.getElementById('submitVote');
     const resultsDiv = document.getElementById('results');
+    const gistUrl = 'YOUR_GIST_URL'; // Replace with your actual Gist URL
+    const githubToken = 'YOUR_GITHUB_TOKEN'; // Optional: Replace with your GitHub token if required
 
-    const pollKey = 'pollVote';
-    const votesKey = 'pollVotes';
+    async function fetchVotes() {
+        const response = await fetch(gistUrl);
+        const data = await response.json();
+        return JSON.parse(data.content); // Parse the JSON content
+    }
 
-    let votes = JSON.parse(localStorage.getItem(votesKey)) || { "option 1": 0, "option 2": 0 };
+    async function updateVotes(updatedVotes) {
+        const response = await fetch(gistUrl, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json',
+                'Authorization': `token ${githubToken}`
+            },
+            body: JSON.stringify({ content: JSON.stringify(updatedVotes) })
+        });
+        return response;
+    }
 
-    submitVoteButton.addEventListener('click', () => {
+    submitVoteButton.addEventListener('click', async () => {
         const selectedOption = document.querySelector('input[name="poll"]:checked');
 
         if (!selectedOption) {
@@ -156,43 +128,28 @@
         }
 
         const optionValue = selectedOption.value;
-
-        // Check if the user has already voted
-        if (localStorage.getItem(pollKey)) {
-            alert('You have already voted!');
-            return;
-        }
-
-        // Record the vote and update counts
+        const votes = await fetchVotes();
+        
         votes[optionValue]++;
-        localStorage.setItem(pollKey, 'true');
-        localStorage.setItem(votesKey, JSON.stringify(votes));
-
-        // Display results
-        displayResults();
+        
+        await updateVotes(votes);
+        displayResults(votes);
     });
 
-    function displayResults() {
+    async function displayResults(votes) {
         resultsDiv.style.display = 'block';
         resultsDiv.innerHTML = `
             <h3>Results:</h3>
-            <p>Option 1: ${votes["Option 1"]} votes</p>
-            <p>Option 2: ${votes["Option 2"]} votes</p>
+            <p>Grilled Cheese: ${votes["Grilled Cheese"]} votes</p>
+            <p>Mac & Cheese: ${votes["Mac & Cheese"]} votes</p>
         `;
     }
 
-    // Reset votes every week
-    if (!localStorage.getItem('lastReset') || (Date.now() - localStorage.getItem('lastReset')) > 604800000) {
-        localStorage.removeItem(votesKey);
-        localStorage.removeItem(pollKey);
-        localStorage.setItem('lastReset', Date.now());
-    }
-
-    // Check if the user has already voted and display results if they have
-    if (localStorage.getItem(pollKey)) {
-        displayResults();
-    }
+    // Fetch results when the page loads
+    document.addEventListener('DOMContentLoaded', async () => {
+        const votes = await fetchVotes();
+        displayResults(votes);
+    });
 </script>
-
 </body>
 </html>
